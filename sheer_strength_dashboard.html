@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sheer Strength · US Performance Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0d0f14;
+  --bg2: #13161d;
+  --bg3: #1a1e28;
+  --bg4: #21263300;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --text2: #8892a4;
+  --text3: #525d70;
+  --accent: #4f8ef7;
+  --accent2: #6366f1;
+  --green: #22c55e;
+  --red: #ef4444;
+  --green-bg: rgba(34,197,94,0.1);
+  --red-bg: rgba(239,68,68,0.1);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,0.1);
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ─── LAYOUT ─── */
+.shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 24px;
+}
+.main { flex: 1; min-width: 0; padding: 32px 36px; }
+
+/* ─── SIDEBAR ─── */
+.logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.logo-name { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.2px; }
+.logo-sub { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+.nav-section { padding: 8px 12px 4px; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; }
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; margin: 1px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 13px; color: var(--text2);
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.nav-item.active { background: rgba(79,142,247,0.12); color: var(--accent); }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+
+/* ─── TOP BAR ─── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+}
+.page-title { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; }
+.page-sub { font-size: 13px; color: var(--text3); margin-top: 2px; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ─── PILL TABS ─── */
+.tabs {
+  display: inline-flex;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text2);
+  border: none;
+  background: transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab.active { background: var(--accent); color: #fff; }
+.tab:hover:not(.active) { background: rgba(255,255,255,0.06); color: var(--text); }
+
+/* ─── SELECT ─── */
+select {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-family: var(--font);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238892a4' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+/* ─── KPI CARDS ─── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.kpi {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.kpi:hover { border-color: var(--border2); }
+.kpi-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+.kpi-val { font-size: 22px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+.kpi-delta { font-size: 11px; font-weight: 500; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+.kpi-delta.pos { color: var(--green); }
+.kpi-delta.neg { color: var(--red); }
+.kpi-delta.neu { color: var(--text3); }
+.kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.kpi-accent.blue { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.kpi-accent.green { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.kpi-accent.red { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.kpi-accent.amber { background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+/* ─── CHART AREA ─── */
+.chart-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+.chart-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+}
+.chart-title { font-size: 14px; font-weight: 500; color: var(--text); }
+.chart-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+.chart-wrap { position: relative; }
+
+/* ─── MAIN TABLE ─── */
+.section-title {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--text3);
+  margin: 24px 0 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.table-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th {
+  background: var(--bg3);
+  padding: 10px 12px;
+  text-align: right;
+  font-weight: 500;
+  color: var(--text3);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+thead th:first-child {
+  text-align: left;
+  min-width: 155px;
+  position: sticky;
+  left: 0;
+  z-index: 3;
+}
+thead th.year-col { color: var(--accent); }
+tbody td {
+  padding: 8px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+tbody td:first-child {
+  text-align: left;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text2);
+  background: var(--bg2);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(255,255,255,0.02); }
+tbody tr:hover td:first-child { background: rgba(255,255,255,0.03); }
+
+/* section header rows */
+.tbl-section th {
+  background: rgba(79,142,247,0.06);
+  color: var(--accent);
+  font-size: 10px;
+  padding: 6px 12px;
+  text-align: left;
+  border-top: 1px solid rgba(79,142,247,0.15);
+  border-bottom: 1px solid rgba(79,142,247,0.15);
+  letter-spacing: 0.1em;
+}
+
+/* avg rows */
+.avg-row td {
+  background: rgba(99,102,241,0.07) !important;
+  color: var(--accent2) !important;
+  font-weight: 500;
+}
+
+/* delta chips */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
+  font-family: var(--mono);
+  vertical-align: middle;
+}
+.chip.pos { background: var(--green-bg); color: var(--green); }
+.chip.neg { background: var(--red-bg); color: var(--red); }
+.chip.na { color: var(--text3); font-size: 10px; margin-left: 2px; }
+
+/* yoy cells */
+.yoy-pos { color: var(--green) !important; }
+.yoy-neg { color: var(--red) !important; }
+.yoy-na { color: var(--text3) !important; }
+
+/* null cells */
+.null-cell { color: var(--text3) !important; font-family: var(--font) !important; }
+
+/* tabs for table view selector */
+.view-tabs { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+.view-tab {
+  flex: 1; padding: 8px 0; text-align: center; font-size: 12px; font-weight: 500;
+  cursor: pointer; color: var(--text2); background: var(--bg3); border: none;
+  border-right: 1px solid var(--border); transition: all 0.15s;
+}
+.view-tab:last-child { border-right: none; }
+.view-tab.active { background: rgba(79,142,247,0.15); color: var(--accent); }
+.view-tab:hover:not(.active) { background: rgba(255,255,255,0.04); }
+
+/* ─── LEGEND ─── */
+.legend {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  font-size: 11px; color: var(--text3);
+  margin-bottom: 12px;
+}
+.leg { display: flex; align-items: center; gap: 5px; }
+.leg-sq { width: 9px; height: 9px; border-radius: 2px; }
+
+/* ─── FOOTER ─── */
+.footer { padding: 24px 0 0; font-size: 11px; color: var(--text3); border-top: 1px solid var(--border); margin-top: 32px; }
+
+/* ─── SECTION PANELS ─── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-name">Sheer Strength</div>
+      <div class="logo-sub">US · Amazon Analytics</div>
+    </div>
+    <div class="nav-section">Views</div>
+    <a class="nav-item active" onclick="showPanel('overview'); setNav(this)">
+      <span class="nav-dot"></span> Overview
+    </a>
+    <a class="nav-item" onclick="showPanel('monthly'); setNav(this)">
+      <span class="nav-dot"></span> Monthly Table
+    </a>
+    <a class="nav-item" onclick="showPanel('quarterly'); setNav(this)">
+      <span class="nav-dot"></span> Quarterly Table
+    </a>
+    <a class="nav-item" onclick="showPanel('yearly'); setNav(this)">
+      <span class="nav-dot"></span> Yearly Summary
+    </a>
+    <a class="nav-item" onclick="showPanel('yoy'); setNav(this)">
+      <span class="nav-dot"></span> YoY Comparison
+    </a>
+    <div class="nav-section" style="margin-top:12px">Metrics</div>
+    <a class="nav-item" onclick="showPanel('ads'); setNav(this)">
+      <span class="nav-dot"></span> Advertising
+    </a>
+    <a class="nav-item" onclick="showPanel('sales'); setNav(this)">
+      <span class="nav-dot"></span> Sales & Orders
+    </a>
+    <a class="nav-item" onclick="showPanel('returns'); setNav(this)">
+      <span class="nav-dot"></span> Returns
+    </a>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Performance Dashboard</div>
+        <div class="page-sub">Data updated through March 2026 · Amazon US</div>
+      </div>
+      <div class="controls">
+        <select id="yearFilter" onchange="renderAll()">
+          <option value="all">All Years</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ OVERVIEW ══ -->
+    <div id="panel-overview" class="panel active">
+      <div id="kpi-grid" class="kpi-grid"></div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title">Revenue & Ad Spend Trend</div>
+            <div class="chart-sub">Ordered Product Sales vs Ad Spend over time</div>
+          </div>
+          <div class="tabs" id="chartMetricTabs">
+            <button class="tab active" onclick="switchChart('revenue',this)">Revenue</button>
+            <button class="tab" onclick="switchChart('clicks',this)">Clicks</button>
+            <button class="tab" onclick="switchChart('orders',this)">Orders</button>
+            <button class="tab" onclick="switchChart('impressions',this)">Impressions</button>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="mainChart" role="img" aria-label="Monthly trend chart for Sheer Strength US metrics"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title">ACoS % & Refund Rate</div>
+            <div class="chart-sub">Efficiency metrics over time (lower is better)</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="ratioChart" role="img" aria-label="ACoS and Refund Rate trend"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ MONTHLY TABLE ══ -->
+    <div id="panel-monthly" class="panel">
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:var(--green)"></span> Positive MoM delta</span>
+        <span class="leg"><span class="leg-sq" style="background:var(--red)"></span> Negative MoM delta</span>
+        <span style="font-style:italic">* ACoS, Refund Rate: color inverted (lower = better)</span>
+      </div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="monthly-table">
+            <thead><tr id="monthly-head"></tr></thead>
+            <tbody id="monthly-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ QUARTERLY TABLE ══ -->
+    <div id="panel-quarterly" class="panel">
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:var(--green)"></span> Positive QoQ delta</span>
+        <span class="leg"><span class="leg-sq" style="background:var(--red)"></span> Negative QoQ delta</span>
+        <span class="leg"><span class="leg-sq" style="background:var(--accent)"></span> YoY comparison</span>
+      </div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="quarterly-table">
+            <thead><tr id="quarterly-head"></tr></thead>
+            <tbody id="quarterly-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ YEARLY SUMMARY ══ -->
+    <div id="panel-yearly" class="panel">
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="yearly-table">
+            <thead><tr id="yearly-head"></tr></thead>
+            <tbody id="yearly-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ YOY COMPARISON ══ -->
+    <div id="panel-yoy" class="panel">
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:var(--green)"></span> YoY improvement</span>
+        <span class="leg"><span class="leg-sq" style="background:var(--red)"></span> YoY decline</span>
+        <span style="font-style:italic">* ACoS, Refund Rate: inverted</span>
+      </div>
+
+      <div class="section-title">YoY by Month — 2025 vs 2024</div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="yoy-monthly-table">
+            <thead><tr id="yoy-monthly-head"></tr></thead>
+            <tbody id="yoy-monthly-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-title">YoY by Quarter — 2025 vs 2024</div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="yoy-qtr-table">
+            <thead><tr id="yoy-qtr-head"></tr></thead>
+            <tbody id="yoy-qtr-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-title">YoY Chart — 2025 vs 2024</div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Month-by-Month YoY % Change (2025 vs 2024)</div>
+        </div>
+        <div class="controls" style="margin-bottom:12px">
+          <div class="tabs" id="yoyChartTabs">
+            <button class="tab active" onclick="switchYoyChart('Ad Sales',this)">Ad Revenue</button>
+            <button class="tab" onclick="switchYoyChart('Ad Spend',this)">Ad Spend</button>
+            <button class="tab" onclick="switchYoyChart('Orders',this)">Orders</button>
+            <button class="tab" onclick="switchYoyChart('Impressions',this)">Impressions</button>
+            <button class="tab" onclick="switchYoyChart('Ordered Product Sales',this)">Total Sales</button>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:240px">
+          <canvas id="yoyChart" role="img" aria-label="YoY percentage change chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ ADS PANEL ══ -->
+    <div id="panel-ads" class="panel">
+      <div class="kpi-grid" id="ads-kpi"></div>
+      <div class="table-card"><div class="table-scroll">
+        <table id="ads-table"><thead><tr id="ads-head"></tr></thead><tbody id="ads-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════ SALES PANEL ══ -->
+    <div id="panel-sales" class="panel">
+      <div class="kpi-grid" id="sales-kpi"></div>
+      <div class="table-card"><div class="table-scroll">
+        <table id="sales-table"><thead><tr id="sales-head"></tr></thead><tbody id="sales-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════ RETURNS PANEL ══ -->
+    <div id="panel-returns" class="panel">
+      <div class="kpi-grid" id="returns-kpi"></div>
+      <div class="table-card"><div class="table-scroll">
+        <table id="returns-table"><thead><tr id="returns-head"></tr></thead><tbody id="returns-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <div class="footer">
+      Sheer Strength · US Amazon Performance · Data sourced from Amazon Seller Central · Sheer Strength MoM &amp; YoY Tracker
+    </div>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════ DATA
+const RAW = [{"Month":"2024-01","Impressions":387557,"Clicks":2576,"Ad Spend":6400.96,"Ad Sales":12190.31,"Orders":441,"Ordered Product Sales":null,"Units Ordered":null,"Total Order Items":null,"Units Refunded":null,"Refund Rate":null,"# of days":31},{"Month":"2024-02","Impressions":361095,"Clicks":2525,"Ad Spend":6211.75,"Ad Sales":12041.38,"Orders":441,"Ordered Product Sales":null,"Units Ordered":null,"Total Order Items":null,"Units Refunded":null,"Refund Rate":null,"# of days":29},{"Month":"2024-03","Impressions":376576,"Clicks":2780,"Ad Spend":6803.71,"Ad Sales":13682.58,"Orders":475,"Ordered Product Sales":null,"Units Ordered":null,"Total Order Items":null,"Units Refunded":null,"Refund Rate":null,"# of days":31},{"Month":"2024-04","Impressions":663037,"Clicks":3113,"Ad Spend":8075.23,"Ad Sales":16094.28,"Orders":535,"Ordered Product Sales":null,"Units Ordered":null,"Total Order Items":null,"Units Refunded":null,"Refund Rate":null,"# of days":30},{"Month":"2024-05","Impressions":748000,"Clicks":2872,"Ad Spend":9779.11,"Ad Sales":12943.57,"Orders":423,"Ordered Product Sales":38399.62,"Units Ordered":1359,"Total Order Items":1280,"Units Refunded":13,"Refund Rate":0.0096,"# of days":31},{"Month":"2024-06","Impressions":1077243,"Clicks":4247,"Ad Spend":14869.27,"Ad Sales":18282.8,"Orders":584,"Ordered Product Sales":48999.92,"Units Ordered":1751,"Total Order Items":1441,"Units Refunded":15,"Refund Rate":0.0086,"# of days":30},{"Month":"2024-07","Impressions":847137,"Clicks":4293,"Ad Spend":16520.48,"Ad Sales":19588.43,"Orders":643,"Ordered Product Sales":49384.23,"Units Ordered":1728,"Total Order Items":1642,"Units Refunded":17,"Refund Rate":0.0098,"# of days":31},{"Month":"2024-08","Impressions":1098376,"Clicks":4985,"Ad Spend":16619.32,"Ad Sales":5301.36,"Orders":165,"Ordered Product Sales":60360.36,"Units Ordered":1997,"Total Order Items":1902,"Units Refunded":17,"Refund Rate":0.0085,"# of days":31},{"Month":"2024-09","Impressions":1596402,"Clicks":7171,"Ad Spend":21642.95,"Ad Sales":34700.82,"Orders":1068,"Ordered Product Sales":72274.18,"Units Ordered":2384,"Total Order Items":2243,"Units Refunded":28,"Refund Rate":0.0117,"# of days":30},{"Month":"2024-10","Impressions":1403147,"Clicks":6502,"Ad Spend":20660.17,"Ad Sales":31287.23,"Orders":994,"Ordered Product Sales":68951.53,"Units Ordered":2292,"Total Order Items":2184,"Units Refunded":19,"Refund Rate":0.0083,"# of days":31},{"Month":"2024-11","Impressions":2154946,"Clicks":10764,"Ad Spend":27536.07,"Ad Sales":49243.4,"Orders":1534,"Ordered Product Sales":97612.07,"Units Ordered":3254,"Total Order Items":3098,"Units Refunded":36,"Refund Rate":0.0111,"# of days":30},{"Month":"2024-12","Impressions":2456355,"Clicks":10235,"Ad Spend":24387.37,"Ad Sales":47684.11,"Orders":1452,"Ordered Product Sales":110534.15,"Units Ordered":3536,"Total Order Items":3400,"Units Refunded":38,"Refund Rate":0.0107,"# of days":31},{"Month":"2025-01","Impressions":2480488,"Clicks":9630,"Ad Spend":26459.39,"Ad Sales":36024.04,"Orders":1091,"Ordered Product Sales":87638.9,"Units Ordered":2784,"Total Order Items":2680,"Units Refunded":45,"Refund Rate":0.0162,"# of days":31},{"Month":"2025-02","Impressions":2594205,"Clicks":10929,"Ad Spend":29006.36,"Ad Sales":44811.6,"Orders":1314,"Ordered Product Sales":97991.39,"Units Ordered":3004,"Total Order Items":2893,"Units Refunded":25,"Refund Rate":0.0083,"# of days":28},{"Month":"2025-03","Impressions":3358350,"Clicks":15541,"Ad Spend":37324.81,"Ad Sales":69248.98,"Orders":2043,"Ordered Product Sales":136223.07,"Units Ordered":4250,"Total Order Items":4053,"Units Refunded":49,"Refund Rate":0.0115,"# of days":31},{"Month":"2025-04","Impressions":2170562,"Clicks":14780,"Ad Spend":31747.18,"Ad Sales":70628.84,"Orders":1983,"Ordered Product Sales":142340.9,"Units Ordered":4235,"Total Order Items":4049,"Units Refunded":58,"Refund Rate":0.0137,"# of days":30},{"Month":"2025-05","Impressions":2163358,"Clicks":11309,"Ad Spend":26341,"Ad Sales":50772.01,"Orders":1322,"Ordered Product Sales":122950.01,"Units Ordered":3394,"Total Order Items":3263,"Units Refunded":43,"Refund Rate":0.0127,"# of days":31},{"Month":"2025-06","Impressions":2052373,"Clicks":12804,"Ad Spend":29778.71,"Ad Sales":54502.23,"Orders":1455,"Ordered Product Sales":125272.61,"Units Ordered":3590,"Total Order Items":3435,"Units Refunded":45,"Refund Rate":0.0125,"# of days":30},{"Month":"2025-07","Impressions":2110427,"Clicks":12411,"Ad Spend":29488.02,"Ad Sales":51413.4,"Orders":1467,"Ordered Product Sales":121051.2,"Units Ordered":3666,"Total Order Items":3507,"Units Refunded":60,"Refund Rate":0.0164,"# of days":31},{"Month":"2025-08","Impressions":2096780,"Clicks":10620,"Ad Spend":26608.04,"Ad Sales":46259.76,"Orders":1254,"Ordered Product Sales":111157.36,"Units Ordered":3144,"Total Order Items":3042,"Units Refunded":37,"Refund Rate":0.0118,"# of days":31},{"Month":"2025-09","Impressions":1341425,"Clicks":11261,"Ad Spend":27820.6,"Ad Sales":50484.76,"Orders":1310,"Ordered Product Sales":115062.54,"Units Ordered":3175,"Total Order Items":3076,"Units Refunded":47,"Refund Rate":0.0148,"# of days":30},{"Month":"2025-10","Impressions":1578540,"Clicks":11051,"Ad Spend":27195.15,"Ad Sales":48756.89,"Orders":1286,"Ordered Product Sales":114126.55,"Units Ordered":3223,"Total Order Items":3091,"Units Refunded":63,"Refund Rate":0.0195,"# of days":31},{"Month":"2025-11","Impressions":1545404,"Clicks":10877,"Ad Spend":28132.41,"Ad Sales":44922.05,"Orders":1249,"Ordered Product Sales":109447.21,"Units Ordered":3284,"Total Order Items":3136,"Units Refunded":48,"Refund Rate":0.0146,"# of days":30},{"Month":"2025-12","Impressions":1547902,"Clicks":9412,"Ad Spend":25122.4,"Ad Sales":39047.85,"Orders":1018,"Ordered Product Sales":105511.22,"Units Ordered":2931,"Total Order Items":2812,"Units Refunded":56,"Refund Rate":0.0191,"# of days":31},{"Month":"2026-01","Impressions":2026478,"Clicks":11680,"Ad Spend":31782.79,"Ad Sales":48059.18,"Orders":1246,"Ordered Product Sales":116936.07,"Units Ordered":3195,"Total Order Items":3088,"Units Refunded":76,"Refund Rate":0.0238,"# of days":31},{"Month":"2026-02","Impressions":1879373,"Clicks":11584,"Ad Spend":32007.34,"Ad Sales":57401.59,"Orders":1447,"Ordered Product Sales":127836.94,"Units Ordered":3421,"Total Order Items":3292,"Units Refunded":54,"Refund Rate":0.0158,"# of days":28},{"Month":"2026-03","Impressions":2520713,"Clicks":11918,"Ad Spend":30596.45,"Ad Sales":59219.69,"Orders":1448,"Ordered Product Sales":137285.5,"Units Ordered":3526,"Total Order Items":3427,"Units Refunded":63,"Refund Rate":0.0179,"# of days":31}];
+
+// Derived metrics per row
+function derive(r) {
+  const d = {...r};
+  d.ACoS = (r['Ad Spend'] != null && r['Ad Sales'] != null && r['Ad Sales'] > 0) ? r['Ad Spend']/r['Ad Sales'] : null;
+  d.ROAS = (r['Ad Spend'] != null && r['Ad Sales'] != null && r['Ad Spend'] > 0) ? r['Ad Sales']/r['Ad Spend'] : null;
+  d.CTR = (r.Clicks != null && r.Impressions != null && r.Impressions > 0) ? r.Clicks/r.Impressions : null;
+  d.CVR = (r.Orders != null && r.Clicks != null && r.Clicks > 0) ? r.Orders/r.Clicks : null;
+  d.CPC = (r['Ad Spend'] != null && r.Clicks != null && r.Clicks > 0) ? r['Ad Spend']/r.Clicks : null;
+  return d;
+}
+const DATA = RAW.map(derive);
+
+// ═══════════════════════════════════════════════ METRIC CONFIG
+const METRICS = [
+  { key:'Ad Spend',            label:'Ad Spend',          fmt:'$', unfav:false, section:'Advertising' },
+  { key:'Ad Sales',            label:'Ad Revenue',        fmt:'$', unfav:false, section:'Advertising' },
+  { key:'ACoS',                label:'ACoS %',            fmt:'%', unfav:true,  section:'Advertising' },
+  { key:'ROAS',                label:'ROAS',              fmt:'x', unfav:false, section:'Advertising' },
+  { key:'Impressions',         label:'Impressions',       fmt:'#', unfav:false, section:'Advertising' },
+  { key:'Clicks',              label:'Clicks',            fmt:'#', unfav:false, section:'Advertising' },
+  { key:'Orders',              label:'Orders',            fmt:'#', unfav:false, section:'Advertising' },
+  { key:'CTR',                 label:'CTR',               fmt:'%', unfav:false, section:'Advertising' },
+  { key:'CVR',                 label:'CVR',               fmt:'%', unfav:false, section:'Advertising' },
+  { key:'CPC',                 label:'CPC',               fmt:'$', unfav:true,  section:'Advertising' },
+  { key:'Ordered Product Sales', label:'Total Revenue',   fmt:'$', unfav:false, section:'Sales' },
+  { key:'Units Ordered',       label:'Units Ordered',     fmt:'#', unfav:false, section:'Sales' },
+  { key:'Total Order Items',   label:'Total Order Items', fmt:'#', unfav:false, section:'Sales' },
+  { key:'Units Refunded',      label:'Units Refunded',    fmt:'#', unfav:true,  section:'Returns' },
+  { key:'Refund Rate',         label:'Refund Rate',       fmt:'%', unfav:true,  section:'Returns' },
+];
+
+const AD_METRICS   = METRICS.filter(m=>m.section==='Advertising');
+const SALES_METRICS= METRICS.filter(m=>m.section==='Sales');
+const RETURN_METRICS=METRICS.filter(m=>m.section==='Returns');
+
+// ═══════════════════════════════════════════════ HELPERS
+function fmtVal(v, fmt) {
+  if (v == null || isNaN(v)) return '—';
+  if (fmt === '$') return '$' + (Math.abs(v) >= 1000 ? v.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : v.toFixed(2));
+  if (fmt === '%') return (v * 100).toFixed(2) + '%';
+  if (fmt === 'x') return v.toFixed(2) + 'x';
+  if (fmt === '#') return Math.round(v).toLocaleString('en-US');
+  return v;
+}
+
+function delta(curr, prev) {
+  if (curr == null || prev == null || prev === 0) return null;
+  return (curr - prev) / Math.abs(prev);
+}
+
+function chipHtml(d, unfav) {
+  if (d == null) return '';
+  const pos = unfav ? d < 0 : d > 0;
+  const cls = pos ? 'pos' : 'neg';
+  const sign = d > 0 ? '+' : '';
+  return `<span class="chip ${cls}">${sign}${(d*100).toFixed(1)}%</span>`;
+}
+
+function yoyColor(d, unfav) {
+  if (d == null) return 'yoy-na';
+  const pos = unfav ? d < 0 : d > 0;
+  return pos ? 'yoy-pos' : 'yoy-neg';
+}
+
+function avgValid(arr) {
+  const v = arr.filter(x => x != null && !isNaN(x));
+  return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null;
+}
+
+function sumValid(arr) {
+  const v = arr.filter(x => x != null && !isNaN(x));
+  return v.length ? v.reduce((a,b)=>a+b,0) : null;
+}
+
+function isAvgMetric(key) {
+  return ['ACoS','ROAS','CTR','CVR','CPC','Refund Rate'].includes(key);
+}
+
+function getYear(m) { return parseInt(m.Month.split('-')[0]); }
+function getYM(m) { return m.Month; } // 'YYYY-MM'
+
+function filteredData() {
+  const yr = document.getElementById('yearFilter').value;
+  if (yr === 'all') return DATA;
+  return DATA.filter(r => r.Month.startsWith(yr));
+}
+
+function getMonthLabel(ym) {
+  const [y,mo] = ym.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(mo)-1] + ' ' + y;
+}
+
+// ═══════════════════════════════════════════════ KPI CARDS
+function renderKPIs(containerId, metrics, data) {
+  if (!data.length) return;
+  const last = data[data.length-1];
+  const prev = data.length > 1 ? data[data.length-2] : null;
+  const accents = ['blue','green','amber','red','blue','green'];
+  let html = '';
+  metrics.forEach((m, i) => {
+    const v = last[m.key];
+    const p = prev ? prev[m.key] : null;
+    const d = delta(v, p);
+    const isPos = d == null ? null : (m.unfav ? d < 0 : d > 0);
+    const dClass = d == null ? 'neu' : (isPos ? 'pos' : 'neg');
+    const dStr = d == null ? '' : `${d > 0 ? '+' : ''}${(d*100).toFixed(1)}% vs prev`;
+    const accentClass = accents[i % accents.length];
+    html += `<div class="kpi">
+      <div class="kpi-accent ${accentClass}"></div>
+      <div class="kpi-label">${m.label}</div>
+      <div class="kpi-val">${fmtVal(v, m.fmt)}</div>
+      <div class="kpi-delta ${dClass}">${dStr || 'No prior period'}</div>
+    </div>`;
+  });
+  document.getElementById(containerId).innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════ MAIN CHART
+let mainChartInst = null, ratioChartInst = null, yoyChartInst = null;
+let currentChartMetric = 'revenue';
+let currentYoyMetric = 'Ad Sales';
+
+function switchChart(key, el) {
+  currentChartMetric = key;
+  document.querySelectorAll('#chartMetricTabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  buildMainChart();
+}
+
+function switchYoyChart(key, el) {
+  currentYoyMetric = key;
+  document.querySelectorAll('#yoyChartTabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  buildYoyChart();
+}
+
+function buildMainChart() {
+  const data = filteredData();
+  const labels = data.map(r => getMonthLabel(r.Month));
+  let ds1, ds2, l1, l2;
+
+  if (currentChartMetric === 'revenue') {
+    ds1 = data.map(r=>r['Ordered Product Sales']);
+    ds2 = data.map(r=>r['Ad Spend']);
+    l1 = 'Total Revenue'; l2 = 'Ad Spend';
+  } else if (currentChartMetric === 'clicks') {
+    ds1 = data.map(r=>r.Clicks);
+    ds2 = data.map(r=>r.Impressions ? r.Impressions/100 : null);
+    l1 = 'Clicks'; l2 = 'Impressions ÷100';
+  } else if (currentChartMetric === 'orders') {
+    ds1 = data.map(r=>r.Orders);
+    ds2 = data.map(r=>r['Units Ordered']);
+    l1 = 'Orders'; l2 = 'Units Ordered';
+  } else {
+    ds1 = data.map(r=>r.Impressions);
+    ds2 = data.map(r=>r.Clicks ? r.Clicks * 100 : null);
+    l1 = 'Impressions'; l2 = 'Clicks ×100';
+  }
+
+  if (mainChartInst) mainChartInst.destroy();
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  mainChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: l1, data: ds1, backgroundColor: 'rgba(79,142,247,0.7)', borderColor: '#4f8ef7', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
+        { label: l2, data: ds2, type: 'line', borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.12)', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#f59e0b', fill: true, tension: 0.3, yAxisID: 'y2' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#525d70', font: {size:10}, maxRotation: 45, autoSkip: false }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#525d70', font: {size:10} }, grid: { color: 'rgba(255,255,255,0.06)' }, position: 'left' },
+        y2: { ticks: { color: '#f59e0b', font: {size:10} }, grid: { display: false }, position: 'right' },
+      }
+    }
+  });
+}
+
+function buildRatioChart() {
+  const data = filteredData();
+  const labels = data.map(r => getMonthLabel(r.Month));
+  if (ratioChartInst) ratioChartInst.destroy();
+  const ctx = document.getElementById('ratioChart').getContext('2d');
+  ratioChartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'ACoS %', data: data.map(r=>r.ACoS != null ? +(r.ACoS*100).toFixed(2) : null), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3, yAxisID: 'y' },
+        { label: 'Refund Rate %', data: data.map(r=>r['Refund Rate'] != null ? +(r['Refund Rate']*100).toFixed(2) : null), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.06)', borderWidth: 2, pointRadius: 3, borderDash: [4,3], fill: true, tension: 0.3, yAxisID: 'y2' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#525d70', font: {size:10}, maxRotation: 45, autoSkip: false }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#ef4444', font: {size:10}, callback: v=>v+'%' }, grid: { color: 'rgba(255,255,255,0.05)' }, position: 'left' },
+        y2: { ticks: { color: '#f59e0b', font: {size:10}, callback: v=>v+'%' }, grid: { display: false }, position: 'right' },
+      }
+    }
+  });
+}
+
+function buildYoyChart() {
+  // Only months Jan-Dec for both 2024 and 2025
+  const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+  const monthLabels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const key = currentYoyMetric;
+  const yoyDeltas = months.map(mo => {
+    const r25 = DATA.find(r=>r.Month===`2025-${mo}`);
+    const r24 = DATA.find(r=>r.Month===`2024-${mo}`);
+    if (!r25 || !r24) return null;
+    const v25 = r25[key], v24 = r24[key];
+    return delta(v25, v24);
+  });
+  if (yoyChartInst) yoyChartInst.destroy();
+  const ctx = document.getElementById('yoyChart').getContext('2d');
+  yoyChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: monthLabels,
+      datasets: [{
+        label: 'YoY % Change',
+        data: yoyDeltas.map(d=>d!=null?+(d*100).toFixed(1):null),
+        backgroundColor: yoyDeltas.map(d=>d==null?'rgba(80,93,112,0.3)':d>=0?'rgba(34,197,94,0.7)':'rgba(239,68,68,0.7)'),
+        borderColor: yoyDeltas.map(d=>d==null?'#525d70':d>=0?'#22c55e':'#ef4444'),
+        borderWidth: 1, borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#525d70', font: {size:11} }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#8892a4', font: {size:10}, callback: v=>v+'%' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════ MONTHLY TABLE
+function renderMonthly() {
+  const data = filteredData();
+  const head = document.getElementById('monthly-head');
+  const body = document.getElementById('monthly-body');
+  head.innerHTML = `<th>Metric</th>` + data.map(r=>`<th>${getMonthLabel(r.Month)}</th>`).join('') + `<th>Avg</th>`;
+
+  const sections = {};
+  METRICS.forEach(m => {
+    if (!sections[m.section]) sections[m.section] = [];
+    sections[m.section].push(m);
+  });
+
+  let rows = '';
+  for (const [sec, metrics] of Object.entries(sections)) {
+    rows += `<tr class="tbl-section"><th colspan="${data.length+2}">${sec.toUpperCase()}</th></tr>`;
+    metrics.forEach(m => {
+      const vals = data.map(r=>r[m.key]);
+      const a = isAvgMetric(m.key) ? avgValid(vals) : avgValid(vals);
+      rows += `<tr><td>${m.label}</td>`;
+      vals.forEach((v, i) => {
+        if (v == null) { rows += `<td class="null-cell">—</td>`; return; }
+        const prev = vals.slice(0,i).filter(x=>x!=null).pop() ?? null;
+        const d = delta(v, prev);
+        rows += `<td>${fmtVal(v, m.fmt)}${chipHtml(d, m.unfav)}</td>`;
+      });
+      rows += `<td class="avg-row" style="background:rgba(99,102,241,0.07);color:#818cf8;font-weight:500">${fmtVal(a, m.fmt)}</td></tr>`;
+    });
+    // Avg row for section
+    rows += `<tr class="avg-row"><td>— Period Avg</td>`;
+    data.forEach((_,i) => rows += `<td></td>`);
+    rows += `<td></td></tr>`;
+  }
+  body.innerHTML = rows;
+}
+
+// ═══════════════════════════════════════════════ QUARTERLY TABLE
+function renderQuarterly() {
+  const yr = document.getElementById('yearFilter').value;
+  const years = yr === 'all' ? ['2024','2025','2026'] : [yr];
+
+  const QTR = [[1,2,3],[4,5,6],[7,8,9],[10,11,12]];
+  const QTR_LABELS = ['Q1','Q2','Q3','Q4'];
+
+  // Build quarter keys: ["2024 Q1", ...]
+  const qtrs = [];
+  years.forEach(y => {
+    QTR.forEach((mos, qi) => {
+      const key = `${y} ${QTR_LABELS[qi]}`;
+      const rows = DATA.filter(r => r.Month.startsWith(y+'-') && mos.includes(parseInt(r.Month.split('-')[1])));
+      if (rows.length) qtrs.push({ key, year: y, q: qi, rows });
+    });
+  });
+
+  const head = document.getElementById('quarterly-head');
+  const body = document.getElementById('quarterly-body');
+  head.innerHTML = `<th>Metric</th>` + qtrs.map(q=>`<th>${q.key}</th>`).join('') + `<th>Year Avg</th>`;
+
+  const sections = {};
+  METRICS.forEach(m => {
+    if (!sections[m.section]) sections[m.section] = [];
+    sections[m.section].push(m);
+  });
+
+  let rows = '';
+  for (const [sec, metrics] of Object.entries(sections)) {
+    rows += `<tr class="tbl-section"><th colspan="${qtrs.length+2}">${sec.toUpperCase()}</th></tr>`;
+    metrics.forEach(m => {
+      const qVals = qtrs.map(q => {
+        const vs = q.rows.map(r=>r[m.key]).filter(x=>x!=null);
+        return vs.length ? (isAvgMetric(m.key) ? avgValid(vs) : sumValid(vs)) : null;
+      });
+
+      // Year averages per year
+      const yearMap = {};
+      years.forEach(y => {
+        const yVals = DATA.filter(r=>r.Month.startsWith(y+'-')).map(r=>r[m.key]).filter(x=>x!=null);
+        yearMap[y] = yVals.length ? (isAvgMetric(m.key) ? avgValid(yVals) : avgValid(yVals)) : null;
+      });
+      const overallAvg = avgValid(Object.values(yearMap));
+
+      rows += `<tr><td>${m.label}</td>`;
+      qVals.forEach((v, i) => {
+        if (v == null) { rows += `<td class="null-cell">—</td>`; return; }
+        const prev = qVals.slice(0,i).filter(x=>x!=null).pop() ?? null;
+        const d = delta(v, prev);
+        rows += `<td>${fmtVal(v, m.fmt)}${chipHtml(d, m.unfav)}</td>`;
+      });
+      rows += `<td style="background:rgba(99,102,241,0.07);color:#818cf8;font-weight:500">${fmtVal(overallAvg, m.fmt)}</td></tr>`;
+    });
+  }
+  body.innerHTML = rows;
+}
+
+// ═══════════════════════════════════════════════ YEARLY TABLE
+function renderYearly() {
+  const years = ['2024','2025','2026'];
+  const head = document.getElementById('yearly-head');
+  const body = document.getElementById('yearly-body');
+  head.innerHTML = `<th>Metric</th>` + years.map(y=>`<th class="year-col">${y} Total / Avg</th>`).join('') + `<th>YoY 2024→25</th><th>YoY 2025→26*</th>`;
+
+  const sections = {};
+  METRICS.forEach(m => { if (!sections[m.section]) sections[m.section] = []; sections[m.section].push(m); });
+
+  let rows = '';
+  for (const [sec, metrics] of Object.entries(sections)) {
+    rows += `<tr class="tbl-section"><th colspan="${years.length+3}">${sec.toUpperCase()}</th></tr>`;
+    metrics.forEach(m => {
+      rows += `<tr><td>${m.label}</td>`;
+      const yearVals = years.map(y => {
+        const vs = DATA.filter(r=>r.Month.startsWith(y+'-')).map(r=>r[m.key]).filter(x=>x!=null);
+        return vs.length ? (isAvgMetric(m.key) ? avgValid(vs) : sumValid(vs)) : null;
+      });
+      yearVals.forEach(v => {
+        rows += `<td>${fmtVal(v, m.fmt)}</td>`;
+      });
+      const d1 = delta(yearVals[1], yearVals[0]);
+      const d2 = delta(yearVals[2], yearVals[1]);
+      const cls1 = yoyColor(d1, m.unfav), cls2 = yoyColor(d2, m.unfav);
+      const fmt1 = d1 != null ? `${d1>0?'+':''}${(d1*100).toFixed(1)}%` : '—';
+      const fmt2 = d2 != null ? `${d2>0?'+':''}${(d2*100).toFixed(1)}%` : '—';
+      rows += `<td class="${cls1}">${fmt1}</td><td class="${cls2}">${fmt2}</td></tr>`;
+    });
+  }
+  body.innerHTML = rows;
+}
+
+// ═══════════════════════════════════════════════ YOY MONTHLY TABLE
+function renderYoyMonthly() {
+  const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const head = document.getElementById('yoy-monthly-head');
+  const body = document.getElementById('yoy-monthly-body');
+
+  head.innerHTML = `<th>Metric</th>` + monthNames.map((mn,i) => {
+    const has24 = DATA.find(r=>r.Month===`2024-${months[i]}`);
+    const has25 = DATA.find(r=>r.Month===`2025-${months[i]}`);
+    return (has24&&has25) ? `<th>${mn}</th>` : '';
+  }).join('') + `<th>Full Year</th>`;
+
+  const sections = {};
+  METRICS.forEach(m => { if (!sections[m.section]) sections[m.section] = []; sections[m.section].push(m); });
+
+  let rows = '';
+  for (const [sec, metrics] of Object.entries(sections)) {
+    rows += `<tr class="tbl-section"><th colspan="15">${sec.toUpperCase()} — YoY % Δ (2025 vs 2024)</th></tr>`;
+    metrics.forEach(m => {
+      rows += `<tr><td>${m.label}</td>`;
+      const deltas = [];
+      months.forEach((mo,i) => {
+        const r25 = DATA.find(r=>r.Month===`2025-${mo}`);
+        const r24 = DATA.find(r=>r.Month===`2024-${mo}`);
+        if (!r25||!r24) return;
+        const v25 = r25[m.key], v24 = r24[m.key];
+        const d = delta(v25, v24);
+        deltas.push(d);
+        const cls = yoyColor(d, m.unfav);
+        const txt = d!=null ? `${d>0?'+':''}${(d*100).toFixed(1)}%` : '—';
+        const sub = v24!=null&&v25!=null ? `<br><span style="font-size:10px;color:var(--text3)">${fmtVal(v24,m.fmt)} → ${fmtVal(v25,m.fmt)}</span>` : '';
+        rows += `<td class="${cls}">${txt}${sub}</td>`;
+      });
+      const validDeltas = deltas.filter(d=>d!=null);
+      const avgD = validDeltas.length ? validDeltas.reduce((a,b)=>a+b,0)/validDeltas.length : null;
+      const cls = yoyColor(avgD, m.unfav);
+      const txt = avgD!=null ? `${avgD>0?'+':''}${(avgD*100).toFixed(1)}%` : '—';
+      rows += `<td class="${cls}" style="font-weight:500">${txt}</td></tr>`;
+    });
+  }
+  body.innerHTML = rows;
+}
+
+// ═══════════════════════════════════════════════ YOY QUARTERLY TABLE
+function renderYoyQtr() {
+  const QTR = [[1,2,3],[4,5,6],[7,8,9],[10,11,12]];
+  const QTR_LABELS = ['Q1','Q2','Q3','Q4'];
+
+  const head = document.getElementById('yoy-qtr-head');
+  const body = document.getElementById('yoy-qtr-body');
+
+  head.innerHTML = `<th>Metric</th>` + QTR_LABELS.map(q=>`<th>${q} (2024)</th><th>${q} (2025)</th><th>${q} YoY Δ</th>`).join('') + `<th>Full Year YoY</th>`;
+
+  const sections = {};
+  METRICS.forEach(m => { if (!sections[m.section]) sections[m.section] = []; sections[m.section].push(m); });
+
+  let rows = '';
+  for (const [sec, metrics] of Object.entries(sections)) {
+    rows += `<tr class="tbl-section"><th colspan="${QTR_LABELS.length*3+2}">${sec.toUpperCase()} — Quarterly YoY</th></tr>`;
+    metrics.forEach(m => {
+      rows += `<tr><td>${m.label}</td>`;
+      const yearDeltas = [];
+      QTR.forEach((mos, qi) => {
+        const rows24 = DATA.filter(r=>r.Month.startsWith('2024-')&&mos.includes(parseInt(r.Month.split('-')[1]))).map(r=>r[m.key]).filter(x=>x!=null);
+        const rows25 = DATA.filter(r=>r.Month.startsWith('2025-')&&mos.includes(parseInt(r.Month.split('-')[1]))).map(r=>r[m.key]).filter(x=>x!=null);
+        const v24 = rows24.length ? (isAvgMetric(m.key)?avgValid(rows24):sumValid(rows24)) : null;
+        const v25 = rows25.length ? (isAvgMetric(m.key)?avgValid(rows25):sumValid(rows25)) : null;
+        const d = delta(v25, v24);
+        yearDeltas.push(d);
+        const cls = yoyColor(d, m.unfav);
+        const txt = d!=null ? `${d>0?'+':''}${(d*100).toFixed(1)}%` : '—';
+        rows += `<td>${fmtVal(v24,m.fmt)}</td><td>${fmtVal(v25,m.fmt)}</td><td class="${cls}">${txt}</td>`;
+      });
+      const valid = yearDeltas.filter(d=>d!=null);
+      const avg = valid.length ? valid.reduce((a,b)=>a+b,0)/valid.length : null;
+      const cls = yoyColor(avg, m.unfav);
+      const txt = avg!=null ? `${avg>0?'+':''}${(avg*100).toFixed(1)}%` : '—';
+      rows += `<td class="${cls}" style="font-weight:500">${txt}</td></tr>`;
+    });
+  }
+  body.innerHTML = rows;
+}
+
+// ═══════════════════════════════════════════════ METRIC PANELS
+function renderMetricPanel(panelSuffix, metrics, kpiId) {
+  const data = filteredData();
+  renderKPIs(kpiId, metrics, data);
+
+  const head = document.getElementById(`${panelSuffix}-head`);
+  const body = document.getElementById(`${panelSuffix}-body`);
+  head.innerHTML = `<th>Metric</th>` + data.map(r=>`<th>${getMonthLabel(r.Month)}</th>`).join('') + `<th>Avg</th>`;
+
+  let rows = '';
+  metrics.forEach(m => {
+    const vals = data.map(r=>r[m.key]);
+    const a = avgValid(vals);
+    rows += `<tr><td>${m.label}</td>`;
+    vals.forEach((v,i) => {
+      if (v==null){rows+=`<td class="null-cell">—</td>`;return;}
+      const prev = vals.slice(0,i).filter(x=>x!=null).pop()??null;
+      const d = delta(v,prev);
+      rows += `<td>${fmtVal(v,m.fmt)}${chipHtml(d,m.unfav)}</td>`;
+    });
+    rows += `<td style="background:rgba(99,102,241,0.07);color:#818cf8;font-weight:500">${fmtVal(a,m.fmt)}</td></tr>`;
+  });
+  body.innerHTML = rows;
+}
+
+// ═══════════════════════════════════════════════ PANEL SWITCHING
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  renderAll();
+}
+
+function setNav(el) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════ RENDER ALL
+function renderAll() {
+  const data = filteredData();
+  // Overview KPIs - last month
+  renderKPIs('kpi-grid', METRICS, data);
+  buildMainChart();
+  buildRatioChart();
+  renderMonthly();
+  renderQuarterly();
+  renderYearly();
+  renderYoyMonthly();
+  renderYoyQtr();
+  buildYoyChart();
+  renderMetricPanel('ads',   AD_METRICS,     'ads-kpi');
+  renderMetricPanel('sales', SALES_METRICS,  'sales-kpi');
+  renderMetricPanel('returns',RETURN_METRICS,'returns-kpi');
+}
+
+// Init
+renderAll();
+</script>
+</body>
+</html>
